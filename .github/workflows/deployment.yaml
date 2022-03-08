@@ -1,0 +1,127 @@
+name: "Deployment"
+
+on:
+  workflow_call:
+    inputs:
+      runs_on:
+        required: false
+        type: string
+        default: ubuntu-20.04
+
+      environment:
+        required: true
+        type: string
+
+      deployment_directory:
+        required: true
+        type: string
+
+      deployment_file:
+        required: false
+        type: string
+        default: "values.yaml"
+
+      service_name:
+        required: false
+        type: string
+        default: "ltms-demo"
+
+      repository:
+        required: false
+        type: string
+        default: kargotech/rhodes
+
+      gcp_project_id:
+        required: false
+        type: string
+        default: kargotech-prod
+
+      gke_cluster:
+        required: false
+        type: string
+        default: helios
+
+      gke_zone:
+        required: false
+        type: string
+        default: asia-southeast2-a
+
+      argocd_app:
+        required: true
+        type: string
+
+    secrets:
+      deployer_app_id:
+        required: true
+      deployer_private_key:
+        required: true
+      deployer_installation_id:
+        required: true
+
+      gke_sa_key:
+        required: false
+
+jobs:
+  deployment:
+    name: Deploy
+    runs-on: ${{ inputs.runs_on }}
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Generate token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.deployer_app_id }}
+          private_key: ${{ secrets.deployer_private_key }}
+          installation_id: ${{ secrets.deployer_installation_id }}
+          repository: ${{ inputs.repository }}
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Checkout deployment repo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ inputs.repository }}
+          token: ${{ steps.generate_token.outputs.token }}
+          path: temp
+
+      - name: Set git config
+        run: |
+          AUTHOR_NAME=$(git show -s --format='%aN' ${{ github.sha }})
+          AUTHOR_EMAIL=$(git show -s --format='%ae' ${{ github.sha }})
+          git config --global user.name "${AUTHOR_NAME}"
+          git config --global user.email "${AUTHOR_EMAIL}"
+      - name: Update service tag
+        uses: nick-invision/retry@v2
+        with:
+          timeout_seconds: 15
+          max_attempts: 6
+          command: |
+            cd temp/${{ inputs.deployment_directory }}
+            git fetch origin master
+            git reset --hard origin/master
+            sed '/app:/,/^[a-zA-Z]/ { s/^    tag: .*/    tag: "'${{ github.sha }}'"/g }' ${{ inputs.deployment_file }} > temp && mv temp ${{ inputs.deployment_file }}
+            git commit -am "Bumped ${{ inputs.service_name }} service in '${{ inputs.environment }}' to tag '${{ github.sha }}'"
+            git push
+
+      # Setup gcloud CLI
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          install_components: kubectl
+      - name: Setup Kubernetes config
+        run: |
+          gcloud container clusters get-credentials "${{ inputs.gke_cluster }}" --zone "${{ inputs.gke_zone }}"
+          kubectl config set-context --current --namespace=argocd
+
+      - name: ArgoCD sync app
+        uses: clowdhaus/argo-cd-action/@main
+        with:
+          command: app sync ${{ inputs.argocd_app }}
+          options: --core --async
+      - name: ArgoCD wait until application healthy
+        uses: clowdhaus/argo-cd-action/@main
+        with:
+          command: app wait ${{ inputs.argocd_app }}
+          options: --core --timeout 300

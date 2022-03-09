@@ -6,7 +6,7 @@ on:
       runs_on:
         required: false
         type: string
-        default: ubuntu-20.04
+        default: self-hosted
 
       environment:
         required: true
@@ -57,10 +57,6 @@ on:
         required: true
       deployer_installation_id:
         required: true
-
-      gke_sa_key:
-        required: false
-
 jobs:
   deployment:
     name: Deploy

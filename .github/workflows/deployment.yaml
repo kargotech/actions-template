@@ -50,6 +50,11 @@ on:
         required: true
         type: string
 
+      argocd_version:
+        required: true
+        type: string
+        default: "2.2.5"
+
     secrets:
       deployer_app_id:
         required: true
@@ -114,10 +119,12 @@ jobs:
       - name: ArgoCD sync app
         uses: clowdhaus/argo-cd-action/@main
         with:
+          version: ${{ env.argocd_version }}
           command: app sync ${{ inputs.argocd_app }}
           options: --core --async
       - name: ArgoCD wait until application healthy
         uses: clowdhaus/argo-cd-action/@main
         with:
+          version: ${{ env.argocd_version }}
           command: app wait ${{ inputs.argocd_app }}
           options: --core --timeout 300

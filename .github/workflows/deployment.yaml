@@ -12,15 +12,6 @@ on:
         required: true
         type: string
 
-      deployment_directory:
-        required: true
-        type: string
-
-      deployment_file:
-        required: false
-        type: string
-        default: "values.yaml"
-
       service_name:
         required: false
         type: string
@@ -45,6 +36,15 @@ on:
         required: false
         type: string
         default: asia-southeast2-a
+
+      argocd_directory:
+        required: true
+        type: string
+
+      argocd_values_file:
+        required: false
+        type: string
+        default: "values.yaml"
 
       argocd_app:
         required: true
@@ -99,10 +99,10 @@ jobs:
           timeout_seconds: 15
           max_attempts: 6
           command: |
-            cd temp/${{ inputs.deployment_directory }}
+            cd temp/${{ inputs.argocd_directory }}
             git fetch origin master
             git reset --hard origin/master
-            sed '/app:/,/^[a-zA-Z]/ { s/^    tag: .*/    tag: "'${{ github.sha }}'"/g }' ${{ inputs.deployment_file }} > temp && mv temp ${{ inputs.deployment_file }}
+            sed '/app:/,/^[a-zA-Z]/ { s/^    tag: .*/    tag: "'${{ github.sha }}'"/g }' ${{ inputs.argocd_values_file }} > temp && mv temp ${{ inputs.argocd_values_file }}
             git commit -am "Bumped ${{ inputs.service_name }} service in '${{ inputs.environment }}' to tag '${{ github.sha }}'"
             git push
 

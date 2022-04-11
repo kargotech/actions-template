@@ -1,0 +1,57 @@
+name: "Publish GCR"
+
+on:
+  workflow_call:
+    inputs:
+      runs_on:
+        required: false
+        type: string
+        default: self-hosted
+
+      environment:
+        required: true
+        type: string
+
+      artifact_key:
+        required: true
+        type: string
+
+      artifact_package:
+        required: true
+        type: string
+
+      docker_build_command:
+        required: true
+        type: string
+
+jobs:
+  publish:
+    name: Publish GCR
+    runs-on: ${{ inputs.runs_on }}
+    environment: ${{ inputs.environment }}
+
+    steps:
+      # Install dependency
+      - name: Install unzip
+        run: sudo apt update && sudo apt install -y unzip
+
+      # Download and unpack build artifact
+      - name: Download build result
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ inputs.artifact_key }}
+      - name: Unpack artifact
+        run: unzip ${{ inputs.artifact_package }} -d .
+
+      # Setup docker GCR auth
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+      - name: Configure resources
+        run: |
+          gcloud info
+          gcloud auth configure-docker
+          docker info
+
+      # Build and push docker image
+      - name: Build and push docker
+        run: ${{ inputs.docker_build_command }}

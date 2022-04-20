@@ -9,7 +9,7 @@ on:
         default: self-hosted
 
       environment:
-        required: true
+        required: false
         type: string
 
       artifact_key:
@@ -28,7 +28,6 @@ jobs:
   publish:
     name: Publish GCR
     runs-on: ${{ inputs.runs_on }}
-    environment: ${{ inputs.environment }}
 
     steps:
       # Install dependency

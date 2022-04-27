@@ -1,0 +1,53 @@
+name: "Check GCR"
+
+on:
+  workflow_call:
+    inputs:
+      runs_on:
+        required: false
+        type: string
+        default: self-hosted
+
+      filter_repository:
+        required: true
+        type: string
+
+      filter_tags:
+        required: true
+        type: string
+
+      timeout:
+        required: false
+        type: string
+        default: 15
+
+      retries:
+        required: false
+        type: string
+        default: 6
+
+jobs:
+  # Check if image exists in GCR
+  check-gcr:
+    name: Check image in GCR
+    runs-on: self-hosted
+    steps:
+      # Setup docker GCR auth
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+      - name: Configure resources
+        run: |
+          gcloud info
+          gcloud auth configure-docker
+          docker info
+
+      # Check if image exists in GCR
+      - name: Wait for image in GCR
+        uses: nick-invision/retry@v2
+        with:
+          timeout_seconds: ${{ inputs.timeout }}
+          max_attempts: ${{ inputs.retries }}
+          command: |
+            sleep 10
+            existing_tags=$(gcloud container images list-tags --filter="tags:${{ inputs.filter_tags }}" --format=json ${{ inputs.filter_repository }})
+            if [ "${existing_tags}" == "[]" ]; then exit 1; fi

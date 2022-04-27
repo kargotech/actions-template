@@ -62,6 +62,7 @@ on:
         required: true
       deployer_installation_id:
         required: true
+
 jobs:
   deployment:
     name: Deploy

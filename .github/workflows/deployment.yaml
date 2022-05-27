@@ -54,6 +54,11 @@ on:
         required: false
         type: string
         default: "2.2.5"
+      
+      argocd_timeout:
+        required: false
+        type: number
+        default: 600
 
     secrets:
       deployer_app_id:
@@ -128,4 +133,4 @@ jobs:
         with:
           version: ${{ inputs.argocd_version }}
           command: app wait ${{ inputs.argocd_app }}
-          options: --core --timeout 300
+          options: --core --timeout ${{ inputs.argocd_timeout }}

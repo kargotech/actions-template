@@ -109,6 +109,7 @@ jobs:
             git fetch origin master
             git reset --hard origin/master
             sed '/app:/,/^[a-zA-Z]/ { s/^    tag: .*/    tag: "'${{ github.sha }}'"/g }' ${{ inputs.argocd_values_file }} > temp && mv temp ${{ inputs.argocd_values_file }}
+            sed '/app:/,/^[a-zA-Z]/ { s/^    app-version: .*/    app-version: "'${{ github.ref_name }}'"/g }' ${{ inputs.argocd_values_file }} > temp && mv temp ${{ inputs.argocd_values_file }}
             git commit -am "Bumped ${{ inputs.service_name }} service in '${{ inputs.environment }}' to tag '${{ github.sha }}'"
             git push
 

@@ -85,13 +85,13 @@ jobs:
   argo_rollout:
     name: Argo Rollout
     runs-on: ${{ inputs.runs_on }}
-    environment: ${{ inputs.environment }}
     if: ${{ inputs.argo_rollout_command }} != 'none'
     steps:
       - name: Setup gcloud CLI
         uses: google-github-actions/setup-gcloud@v0
         with:
           install_components: kubectl
+
       - name: Setup Kubernetes config
         run: |
           gcloud container clusters get-credentials "${{ inputs.gke_cluster }}" --zone "${{ inputs.gke_zone }}"
@@ -103,17 +103,10 @@ jobs:
           version: ${{ inputs.argocd_version }}
           command: app actions run ${{ inputs.argocd_app }} ${{ inputs.argo_rollout_command }}
           options: --core --async
-      - name: ArgoCD wait until application healthy
-        uses: clowdhaus/argo-cd-action/@main
-        with:
-          version: ${{ inputs.argocd_version }}
-          command: app wait ${{ inputs.argocd_app }}
-          options: --core --suspended --timeout ${{ inputs.argocd_timeout }}
 
   change_track:
     name: Change track
     runs-on: ${{ inputs.runs_on }}
-    environment: ${{ inputs.environment }}
 
     steps:
       - name: Generate token
@@ -125,8 +118,6 @@ jobs:
           installation_id: ${{ secrets.deployer_installation_id }}
           repository: ${{ inputs.repository }}
 
-      - name: Checkout code
-        uses: actions/checkout@v2
       - name: Checkout deployment repo
         uses: actions/checkout@v2
         with:
@@ -140,6 +131,7 @@ jobs:
           AUTHOR_EMAIL=$(git show -s --format='%ae' ${{ github.sha }})
           git config --global user.name "${AUTHOR_NAME}"
           git config --global user.email "${AUTHOR_EMAIL}"
+
       - name: Update routes track
         uses: nick-invision/retry@v2
         with:
@@ -155,5 +147,5 @@ jobs:
             do
               sed -e "/$i/!b" -e ':a' -e "s/^              subset: .*/              subset: ${{ inputs.track }}/;t trail" -e 'n;ba' -e ':trail' -e 'n;btrail' ${{ inputs.argocd_values_file }} > temp && mv temp ${{ inputs.argocd_values_file }}
             done
-            git commit -am "Bumped ${{ inputs.service_name }} service in '${{ inputs.environment }}' to change  '${{ inputs.http_routes }}' to '${{ inputs.track }}' track"
+            git commit -am "Change '${{ inputs.http_routes }}' to '${{ inputs.track }}' track for '${{ inputs.service_name }}' '${{ inputs.environment }}'"
             git push

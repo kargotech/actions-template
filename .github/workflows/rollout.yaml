@@ -63,7 +63,7 @@ on:
       argo_rollout_command:
         required: false
         type: string
-        default: none
+        default: 'none'
       
       http_routes:
         required: true
@@ -85,7 +85,7 @@ jobs:
   argo_rollout:
     name: Argo Rollout
     runs-on: ${{ inputs.runs_on }}
-    if: ${{ inputs.argo_rollout_command }} != 'none'
+    if: ${{ inputs.argo_rollout_command != 'none' }} 
     steps:
       - name: Setup gcloud CLI
         uses: google-github-actions/setup-gcloud@v0
@@ -107,7 +107,8 @@ jobs:
   change_track:
     name: Change track
     runs-on: ${{ inputs.runs_on }}
-
+    needs: argo_rollout
+    if: ${{ always() }}
     steps:
       - name: Generate token
         id: generate_token
@@ -117,6 +118,9 @@ jobs:
           private_key: ${{ secrets.deployer_private_key }}
           installation_id: ${{ secrets.deployer_installation_id }}
           repository: ${{ inputs.repository }}
+      
+      - name: Checkout code
+        uses: actions/checkout@v2
 
       - name: Checkout deployment repo
         uses: actions/checkout@v2

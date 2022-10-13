@@ -143,9 +143,9 @@ jobs:
             git fetch origin master
             git reset --hard origin/master
             array=( ${{ inputs.http_routes }} )
-            for i in "${array[@]}"
+            for route in "${array[@]}"
             do
-              sed -e "/$i/!b" -e ':a' -e "s/^              subset: .*/              subset: ${{ inputs.track }}/;t trail" -e 'n;ba' -e ':trail' -e 'n;btrail' ${{ inputs.argocd_values_file }} > temp && mv temp ${{ inputs.argocd_values_file }}
+              sed -e "/$route/!b" -e ':a' -e "s/^              subset: .*/              subset: ${{ inputs.track }}/;t trail" -e 'n;ba' -e ':trail' -e 'n;btrail' ${{ inputs.argocd_values_file }} > temp && mv temp ${{ inputs.argocd_values_file }}
             done
             git commit -am "Change '${{ inputs.http_routes }}' to '${{ inputs.track }}' track for '${{ inputs.service_name }}' '${{ inputs.environment }}'"
             git push

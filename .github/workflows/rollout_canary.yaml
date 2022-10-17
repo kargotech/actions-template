@@ -1,4 +1,4 @@
-name: "Rollout"
+name: "Rollout Canary"
 
 on:
   workflow_call:

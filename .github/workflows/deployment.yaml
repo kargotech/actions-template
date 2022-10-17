@@ -60,7 +60,7 @@ on:
         type: number
         default: 600
 
-      canary:
+      is_canary:
         required: true
         type: boolean
         default: false

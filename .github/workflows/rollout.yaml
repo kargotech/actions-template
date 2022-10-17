@@ -153,3 +153,10 @@ jobs:
             done
             git commit -am "Change '${{ inputs.http_routes }}' to '${{ inputs.track }}' track for '${{ inputs.service_name }}' '${{ inputs.environment }}'"
             git push
+
+      - name: ArgoCD sync app
+        uses: clowdhaus/argo-cd-action/@main
+        with:
+          version: ${{ inputs.argocd_version }}
+          command: app sync ${{ inputs.argocd_app }}
+          options: --core --async

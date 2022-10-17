@@ -1,4 +1,4 @@
-name: "Deployment"
+name: "Rollout Canary"
 
 on:
   workflow_call:
@@ -59,11 +59,19 @@ on:
         required: false
         type: number
         default: 600
-
-      is_canary:
+      
+      argo_rollout_command:
+        required: false
+        type: string
+        default: 'none'
+      
+      http_routes:
         required: true
-        type: boolean
-        default: false
+        type: string
+      
+      track:
+        required: true
+        type: string
 
     secrets:
       deployer_app_id:
@@ -74,11 +82,33 @@ on:
         required: true
 
 jobs:
-  deployment:
-    name: Deploy
+  argo_rollout:
+    name: Argo Rollout
     runs-on: ${{ inputs.runs_on }}
-    environment: ${{ inputs.environment }}
+    if: ${{ inputs.argo_rollout_command != 'none' }} 
+    steps:
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          install_components: kubectl
 
+      - name: Setup Kubernetes config
+        run: |
+          gcloud container clusters get-credentials "${{ inputs.gke_cluster }}" --zone "${{ inputs.gke_zone }}"
+          kubectl config set-context --current --namespace=argocd
+
+      - name: ArgoCD run Argo Rollout action
+        uses: clowdhaus/argo-cd-action/@main
+        with:
+          version: ${{ inputs.argocd_version }}
+          command: app actions run ${{ inputs.argocd_app }} ${{ inputs.argo_rollout_command }}
+          options: --core
+
+  change_track:
+    name: Change track
+    runs-on: ${{ inputs.runs_on }}
+    needs: argo_rollout
+    if: ${{ always() }}
     steps:
       - name: Generate token
         id: generate_token
@@ -88,9 +118,10 @@ jobs:
           private_key: ${{ secrets.deployer_private_key }}
           installation_id: ${{ secrets.deployer_installation_id }}
           repository: ${{ inputs.repository }}
-
+      
       - name: Checkout code
         uses: actions/checkout@v2
+
       - name: Checkout deployment repo
         uses: actions/checkout@v2
         with:
@@ -104,29 +135,24 @@ jobs:
           AUTHOR_EMAIL=$(git show -s --format='%ae' ${{ github.sha }})
           git config --global user.name "${AUTHOR_NAME}"
           git config --global user.email "${AUTHOR_EMAIL}"
-      - name: Update service tag
+
+      - name: Update routes track
         uses: nick-invision/retry@v2
         with:
           timeout_seconds: 15
           max_attempts: 6
+          shell: bash
           command: |
             cd temp/${{ inputs.argocd_directory }}
             git fetch origin master
             git reset --hard origin/master
-            sed '/app:/,/^[a-zA-Z]/ { s/^    tag: .*/    tag: "'${{ github.sha }}'"/g }' ${{ inputs.argocd_values_file }} > temp && mv temp ${{ inputs.argocd_values_file }}
-            sed '/app:/,/^[a-zA-Z]/ { s/^    app-version: .*/    app-version: "'${{ github.ref_name }}'"/g }' ${{ inputs.argocd_values_file }} > temp && mv temp ${{ inputs.argocd_values_file }}
-            git commit -am "Bumped ${{ inputs.service_name }} service in '${{ inputs.environment }}' to tag '${{ github.sha }}'"
+            array=( ${{ inputs.http_routes }} )
+            for route in "${array[@]}"
+            do
+              sed -e "/$route/!b" -e ':a' -e "s/^              subset: .*/              subset: ${{ inputs.track }}/;t trail" -e 'n;ba' -e ':trail' -e 'n;btrail' ${{ inputs.argocd_values_file }} > temp && mv temp ${{ inputs.argocd_values_file }}
+            done
+            git commit -am "Change '${{ inputs.http_routes }}' to '${{ inputs.track }}' track for '${{ inputs.service_name }}' '${{ inputs.environment }}'"
             git push
-
-      # Setup gcloud CLI
-      - name: Setup gcloud CLI
-        uses: google-github-actions/setup-gcloud@v0
-        with:
-          install_components: kubectl
-      - name: Setup Kubernetes config
-        run: |
-          gcloud container clusters get-credentials "${{ inputs.gke_cluster }}" --zone "${{ inputs.gke_zone }}"
-          kubectl config set-context --current --namespace=argocd
 
       - name: ArgoCD sync app
         uses: clowdhaus/argo-cd-action/@main
@@ -134,19 +160,3 @@ jobs:
           version: ${{ inputs.argocd_version }}
           command: app sync ${{ inputs.argocd_app }}
           options: --core --async
-
-      - name: ArgoCD wait until application healthy (non canary)
-        uses: clowdhaus/argo-cd-action/@main
-        if: ${{ inputs.canary == false }}
-        with:
-          version: ${{ inputs.argocd_version }}
-          command: app wait ${{ inputs.argocd_app }}
-          options: --core --timeout ${{ inputs.argocd_timeout }}
-      
-      - name: ArgoCD wait until application healthy (canary)
-        uses: clowdhaus/argo-cd-action/@main
-        if: ${{ inputs.canary }}
-        with:
-          version: ${{ inputs.argocd_version }}
-          command: app wait ${{ inputs.argocd_app }}
-          options: --core --suspended --timeout ${{ inputs.argocd_timeout }}

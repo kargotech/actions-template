@@ -137,7 +137,7 @@ jobs:
 
       - name: ArgoCD wait until application healthy (non canary)
         uses: clowdhaus/argo-cd-action/@main
-        if: ${{ inputs.canary == false }}
+        if: ${{ inputs.is_canary == false }}
         with:
           version: ${{ inputs.argocd_version }}
           command: app wait ${{ inputs.argocd_app }}
@@ -145,7 +145,7 @@ jobs:
       
       - name: ArgoCD wait until application healthy (canary)
         uses: clowdhaus/argo-cd-action/@main
-        if: ${{ inputs.canary }}
+        if: ${{ inputs.is_canary }}
         with:
           version: ${{ inputs.argocd_version }}
           command: app wait ${{ inputs.argocd_app }}

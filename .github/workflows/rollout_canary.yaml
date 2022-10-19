@@ -69,7 +69,7 @@ on:
         required: true
         type: string
       
-      track:
+      release:
         required: true
         type: string
 
@@ -104,8 +104,8 @@ jobs:
           command: app actions run ${{ inputs.argocd_app }} ${{ inputs.argo_rollout_command }}
           options: --core
 
-  change_track:
-    name: Change track
+  change_release:
+    name: Change release
     runs-on: ${{ inputs.runs_on }}
     needs: argo_rollout
     if: ${{ always() }}
@@ -136,7 +136,7 @@ jobs:
           git config --global user.name "${AUTHOR_NAME}"
           git config --global user.email "${AUTHOR_EMAIL}"
 
-      - name: Update routes track
+      - name: Update routes release
         uses: nick-invision/retry@v2
         with:
           timeout_seconds: 15
@@ -149,9 +149,9 @@ jobs:
             array=( ${{ inputs.http_routes }} )
             for route in "${array[@]}"
             do
-              sed -e "/$route/!b" -e ':a' -e "s/^              subset: .*/              subset: ${{ inputs.track }}/;t trail" -e 'n;ba' -e ':trail' -e 'n;btrail' ${{ inputs.argocd_values_file }} > temp && mv temp ${{ inputs.argocd_values_file }}
+              sed -e "/$route/!b" -e ':a' -e "s/^              subset: .*/              subset: ${{ inputs.release }}/;t trail" -e 'n;ba' -e ':trail' -e 'n;btrail' ${{ inputs.argocd_values_file }} > temp && mv temp ${{ inputs.argocd_values_file }}
             done
-            git commit -am "Change '${{ inputs.http_routes }}' to '${{ inputs.track }}' track for '${{ inputs.service_name }}' '${{ inputs.environment }}'"
+            git commit -am "Change '${{ inputs.http_routes }}' to '${{ inputs.release }}' release for '${{ inputs.service_name }}' '${{ inputs.environment }}'"
             git push
 
       - name: ArgoCD sync app

@@ -68,10 +68,12 @@ on:
       http_routes:
         required: true
         type: string
+        default: 'none'
       
       release:
         required: true
         type: string
+        default: 'none'
 
     secrets:
       deployer_app_id:
@@ -107,6 +109,7 @@ jobs:
       - name: Generate token
         id: generate_token
         uses: tibdex/github-app-token@v1
+        if: ${{ (inputs.http_routes != 'none') && (inputs.release != 'none') }}
         with:
           app_id: ${{ secrets.deployer_app_id }}
           private_key: ${{ secrets.deployer_private_key }}
@@ -115,15 +118,18 @@ jobs:
       
       - name: Checkout code
         uses: actions/checkout@v2
+        if: ${{ (inputs.http_routes != 'none') && (inputs.release != 'none') }}
 
       - name: Checkout deployment repo
         uses: actions/checkout@v2
+        if: ${{ (inputs.http_routes != 'none') && (inputs.release != 'none') }}
         with:
           repository: ${{ inputs.repository }}
           token: ${{ steps.generate_token.outputs.token }}
           path: temp
 
       - name: Set git config
+        if: ${{ (inputs.http_routes != 'none') && (inputs.release != 'none') }}
         run: |
           AUTHOR_NAME=$(git show -s --format='%aN' ${{ github.sha }})
           AUTHOR_EMAIL=$(git show -s --format='%ae' ${{ github.sha }})
@@ -132,6 +138,7 @@ jobs:
 
       - name: Update routes release
         uses: nick-invision/retry@v2
+        if: ${{ (inputs.http_routes != 'none') && (inputs.release != 'none') }}
         with:
           timeout_seconds: 15
           max_attempts: 6

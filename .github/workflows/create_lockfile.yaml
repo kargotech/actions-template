@@ -1,0 +1,74 @@
+name: "Create Lockfile"
+
+on:
+  workflow_call:
+    inputs:
+      runs_on:
+        required: false
+        type: string
+        default: self-hosted
+
+      environment:
+        required: true
+        type: string
+
+      service_name:
+        required: false
+        type: string
+        default: "ltms-demo"
+
+      repository:
+        required: false
+        type: string
+        default: kargotech/rhodes
+
+      argocd_directory:
+        required: true
+        type: string
+
+    secrets:
+      deployer_app_id:
+        required: true
+      deployer_private_key:
+        required: true
+      deployer_installation_id:
+        required: true
+
+jobs:
+  create_lockfile:
+    name: Create lockfile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.deployer_app_id }}
+          private_key: ${{ secrets.deployer_private_key }}
+          installation_id: ${{ secrets.deployer_installation_id }}
+          repository: ${{ inputs.repository }}
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Checkout deployment repo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ inputs.repository }}
+          token: ${{ steps.generate_token.outputs.token }}
+          path: temp
+      
+      - name: Set git config and commit lockfile
+        run: |
+          AUTHOR_NAME=$(git show -s --format='%aN' ${{ github.sha }})
+          AUTHOR_EMAIL=$(git show -s --format='%ae' ${{ github.sha }})
+          git config --global user.name "${AUTHOR_NAME}"
+          git config --global user.email "${AUTHOR_EMAIL}"
+          cd temp/${{ inputs.argocd_directory }}
+          git fetch origin master
+          git reset --hard origin/master
+          echo "lockfile_author='${{ github.triggering_actor }}'" > ${{ inputs.environment }}-${{ inputs.service }}.lock
+          echo "timestamp=$(date +'%s')" >> ${{ inputs.environment }}-${{ inputs.service }}.lock
+          echo "commit_sha='${{ github.sha }}'" >> ${{ inputs.environment }}-${{ inputs.service }}.lock
+          git commit -am "Update lockfile for '${{ inputs.service_name }}' '${{ inputs.environment }}'"
+          git push

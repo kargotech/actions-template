@@ -1,0 +1,85 @@
+name: "Check Lockfile"
+
+on:
+  workflow_call:
+    inputs:
+      runs_on:
+        required: false
+        type: string
+        default: self-hosted
+
+      environment:
+        required: true
+        type: string
+
+      service_name:
+        required: false
+        type: string
+        default: "ltms-demo"
+
+      repository:
+        required: false
+        type: string
+        default: kargotech/rhodes
+
+      argocd_directory:
+        required: true
+        type: string
+    
+    outputs:
+      file_exists:
+        description: "true/false STRING" # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idoutputs
+        value: ${{ jobs.check_lockfile.outputs.output1 }}
+      lockfile_author:
+        description: "Github username"
+        value: ${{ jobs.check_lockfile.outputs.output2 }}
+
+    secrets:
+      deployer_app_id:
+        required: true
+      deployer_private_key:
+        required: true
+      deployer_installation_id:
+        required: true
+
+jobs:
+  check_lockfile:
+    name: Check lockfile
+    runs-on: ubuntu-latest
+    # Map the job outputs to step outputs
+    outputs:
+      output1: ${{ steps.step5.outputs.file_exists }}
+      output2: ${{ steps.step5.outputs.lockfile_authors }}
+    steps:
+      - name: Generate token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.deployer_app_id }}
+          private_key: ${{ secrets.deployer_private_key }}
+          installation_id: ${{ secrets.deployer_installation_id }}
+          repository: ${{ inputs.repository }}
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Checkout deployment repo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ inputs.repository }}
+          token: ${{ steps.generate_token.outputs.token }}
+          path: temp
+
+      - id: Check file
+        run: |
+          cd temp/${{ inputs.argocd_directory }}
+          git fetch origin master
+          git reset --hard origin/master
+          if [ -e ${{ inputs.environment }}-${{ inputs.service }}.lock ]
+          then
+            echo "file_exists=true" >> $GITHUB_OUTPUT
+            cat ${{ inputs.environment }}-${{ inputs.service }}.lock | grep "lockfile_author=" >> $GITHUB_OUTPUT
+          else
+            echo "file_exists=false" >> $GITHUB_OUTPUT
+            echo "lockfile_author=none" >> $GITHUB_OUTPUT
+          fi

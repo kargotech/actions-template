@@ -70,7 +70,7 @@ jobs:
           token: ${{ steps.generate_token.outputs.token }}
           path: temp
 
-      - id: Check file
+      - name: Check file
         run: |
           cd temp/${{ inputs.argocd_directory }}
           git fetch origin master

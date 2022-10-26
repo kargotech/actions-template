@@ -67,7 +67,7 @@ jobs:
           cd temp/${{ inputs.argocd_directory }}
           git fetch origin master
           git reset --hard origin/master
-          echo "lockfile_author='${{ github.triggering_actor }}'" > "${{ inputs.environment }}-${{ inputs.service_name }}.lock"
+          echo "lockfile_author=${{ github.triggering_actor }}" > "${{ inputs.environment }}-${{ inputs.service_name }}.lock"
           echo "timestamp=$(date +'%s')" >> "${{ inputs.environment }}-${{ inputs.service_name }}.lock"
           echo "commit_sha='${{ github.sha }}'" >> "${{ inputs.environment }}-${{ inputs.service_name }}.lock"
           cat "${{ inputs.environment }}-${{ inputs.service_name }}.lock"

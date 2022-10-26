@@ -49,7 +49,7 @@ jobs:
     # Map the job outputs to step outputs
     outputs:
       output1: ${{ steps.step4.outputs.file_exists }}
-      output2: ${{ steps.step4.outputs.lockfile_authors }}
+      output2: ${{ steps.step4.outputs.lockfile_author }}
     steps:
       - name: Generate token
         id: generate_token

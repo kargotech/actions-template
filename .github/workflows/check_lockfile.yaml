@@ -48,8 +48,8 @@ jobs:
     runs-on: ubuntu-latest
     # Map the job outputs to step outputs
     outputs:
-      output1: ${{ steps.step5.outputs.file_exists }}
-      output2: ${{ steps.step5.outputs.lockfile_authors }}
+      output1: ${{ steps.step4.outputs.file_exists }}
+      output2: ${{ steps.step4.outputs.lockfile_authors }}
     steps:
       - name: Generate token
         id: generate_token
@@ -71,6 +71,7 @@ jobs:
           path: temp
 
       - name: Check file
+        id: step4
         run: |
           cd temp/${{ inputs.argocd_directory }}
           git fetch origin master

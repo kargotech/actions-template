@@ -49,10 +49,10 @@ jobs:
           repository: ${{ inputs.repository }}
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Checkout deployment repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ inputs.repository }}
           token: ${{ steps.generate_token.outputs.token }}

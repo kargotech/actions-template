@@ -76,7 +76,7 @@ jobs:
           cd temp/${{ inputs.argocd_directory }}
           git fetch origin master
           git reset --hard origin/master
-          if [ -e "'${{ inputs.environment }}'-'${{ inputs.service_name }}'.lock" ]
+          if [ -e "${{ inputs.environment }}-${{ inputs.service_name }}.lock" ]
           then
             echo "file exists"
             echo "file_exists=true" >> $GITHUB_OUTPUT

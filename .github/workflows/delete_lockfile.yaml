@@ -67,6 +67,6 @@ jobs:
           cd temp/${{ inputs.argocd_directory }}
           git fetch origin master
           git reset --hard origin/master
-          rm ${{ inputs.environment }}-${{ inputs.service }}.lock
+          rm "'${{ inputs.environment }}'-'${{ inputs.service }}'.lock"
           git commit -am "Delete lockfile for '${{ inputs.service_name }}' '${{ inputs.environment }}'"
           git push

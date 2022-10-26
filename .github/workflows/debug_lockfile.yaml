@@ -1,0 +1,30 @@
+name: "Debug Lockfile"
+
+on:
+  workflow_call:
+    inputs:
+      runs_on:
+        required: false
+        type: string
+        default: self-hosted
+
+      lockfile_author:
+        required: true
+        type: string
+        default: 'none'
+      
+      action:
+        required: true
+        type: string
+
+jobs:
+  debug_lockfile:
+    name: Debug lockfile
+    runs-on: ${{ inputs.runs_on }}
+    steps:
+      - name: echo
+        run: |
+          echo "lockfile_author=${{ inputs.lockfile_author }}"
+          echo "triggering_actor=${{ github.triggering_actor }}"
+          echo "selected_action=${{ inputs.action }}"
+          exit 1

@@ -37,7 +37,7 @@ on:
 jobs:
   delete_lockfile:
     name: Delete lockfile
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs_on }}
     steps:
       - name: Generate token
         id: generate_token
@@ -58,15 +58,22 @@ jobs:
           token: ${{ steps.generate_token.outputs.token }}
           path: temp
       
-      - name: Set git config and commit lockfile
+      - name: Set git config
         run: |
           AUTHOR_NAME=$(git show -s --format='%aN' ${{ github.sha }})
           AUTHOR_EMAIL=$(git show -s --format='%ae' ${{ github.sha }})
           git config --global user.name "${AUTHOR_NAME}"
           git config --global user.email "${AUTHOR_EMAIL}"
-          cd temp/${{ inputs.argocd_directory }}
-          git fetch origin master
-          git reset --hard origin/master
-          rm "${{ inputs.environment }}-${{ inputs.service_name }}.lock"
-          git commit -am "Delete lockfile for '${{ inputs.service_name }}' '${{ inputs.environment }}'"
-          git push
+
+      - name: Commit delete lockfile
+        uses: nick-invision/retry@v2
+        with:
+          timeout_seconds: 15
+          max_attempts: 6
+          command: |
+            cd temp/${{ inputs.argocd_directory }}
+            git fetch origin master
+            git reset --hard origin/master
+            rm "${{ inputs.environment }}-${{ inputs.service_name }}.lock"
+            git commit -am "Delete lockfile for '${{ inputs.service_name }}' '${{ inputs.environment }}'"
+            git push

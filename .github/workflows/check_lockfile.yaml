@@ -45,7 +45,7 @@ on:
 jobs:
   check_lockfile:
     name: Check lockfile
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs_on }}
     # Map the job outputs to step outputs
     outputs:
       output1: ${{ steps.step4.outputs.file_exists }}

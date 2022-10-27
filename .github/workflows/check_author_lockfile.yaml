@@ -27,7 +27,7 @@ jobs:
         run: |
           echo "# There isn't any new canary deployment" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Please create a new canary deployment before doing a promote or abort." >> $GITHUB_STEP_SUMMARY
+          echo "### Please create a new canary deployment before doing a promote or abort." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Additional info:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -42,9 +42,9 @@ jobs:
         run: |
           echo "# Triggering actor mismatch" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## The one who promote or abort current canary deployment must be the one who is originally initiated it." >> $GITHUB_STEP_SUMMARY
+          echo "### Lockfile with different user already exist, you can't deploy new tag before the previous deployment is finished. The one who promote or abort current canary deployment must be the one who is originally initiated deployment." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Contact the one who initiate it, or edit the lockfile in case they aren't able to do it." >> $GITHUB_STEP_SUMMARY
+          echo "### Contact the one who initiate it, or edit the lockfile in case they aren't able to do it." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Additional info:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -58,7 +58,7 @@ jobs:
         run: |
           echo "# Previous deployment is not finished yet!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Please complete the deployment by either finish the promote step or abort the current deployment." >> $GITHUB_STEP_SUMMARY
+          echo "### Please complete the deployment by either finish the promote step or abort the current deployment." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Additional info:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

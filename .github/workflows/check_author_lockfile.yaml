@@ -52,3 +52,17 @@ jobs:
           echo "- triggering_actor: ${{ github.triggering_actor }}" >> $GITHUB_STEP_SUMMARY
           echo "- selected_action: ${{ inputs.action }}" >> $GITHUB_STEP_SUMMARY
           exit 1
+
+      - name: Deployment unfinidhed
+        if: ${{ ( inputs.lockfile_author != 'none' ) && ( inputs.lockfile_author == github.triggering_actor ) }}
+        run: |
+          echo "# Previous deployment is not finished yet!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Please complete the deployment by either finish the promote step or abort the current deployment." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Additional info:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- lockfile_author: ${{ inputs.lockfile_author }}" >> $GITHUB_STEP_SUMMARY
+          echo "- triggering_actor: ${{ github.triggering_actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- selected_action: ${{ inputs.action }}" >> $GITHUB_STEP_SUMMARY
+          exit 1

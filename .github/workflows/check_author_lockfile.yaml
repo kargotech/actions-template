@@ -29,6 +29,13 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Please create a new canary deployment before doing a promote or abort." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Additional info:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- lockfile_author: ${{ inputs.lockfile_author }}" >> $GITHUB_STEP_SUMMARY
+          echo "- triggering_actor: ${{ github.triggering_actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- selected_action: ${{ inputs.action }}" >> $GITHUB_STEP_SUMMARY
+          exit 1
+
 
       - name: Triggering actor mismatch
         if: ${{ ( inputs.lockfile_author != "none" ) && ( inputs.lockfile_author != github.triggering_actor ) }}
@@ -39,9 +46,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Contact the one who initiate it, or edit the lockfile in case they aren't able to do it." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-
-      - name: echo
-        run: |
           echo "Additional info:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- lockfile_author: ${{ inputs.lockfile_author }}" >> $GITHUB_STEP_SUMMARY

@@ -1,4 +1,4 @@
-name: "Debug Lockfile"
+name: "Check Author Lockfile"
 
 on:
   workflow_call:
@@ -18,8 +18,8 @@ on:
         type: string
 
 jobs:
-  debug_lockfile:
-    name: Debug lockfile
+  check_author_lockfile:
+    name: Check Author Lockfile
     runs-on: ${{ inputs.runs_on }}
     steps:
       - name: echo

@@ -22,9 +22,29 @@ jobs:
     name: Check Author Lockfile
     runs-on: ${{ inputs.runs_on }}
     steps:
+      - name: No canary deployment yet
+        if: ${{ inputs.lockfile_author == "none" }}
+        run: |
+          echo "# There isn't any new canary deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Please create a new canary deployment before doing a promote or abort." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - name: Triggering actor mismatch
+        if: ${{ ( inputs.lockfile_author != "none" ) && ( inputs.lockfile_author != github.triggering_actor ) }}
+        run: |
+          echo "# Triggering actor mismatch" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## The one who promote or abort current canary deployment must be the one who is originally initiated it." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Contact the one who initiate it, or edit the lockfile in case they aren't able to do it." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
       - name: echo
         run: |
-          echo "lockfile_author=${{ inputs.lockfile_author }}"
-          echo "triggering_actor=${{ github.triggering_actor }}"
-          echo "selected_action=${{ inputs.action }}"
+          echo "Additional info:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- lockfile_author: ${{ inputs.lockfile_author }}" >> $GITHUB_STEP_SUMMARY
+          echo "- triggering_actor: ${{ github.triggering_actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- selected_action: ${{ inputs.action }}" >> $GITHUB_STEP_SUMMARY
           exit 1

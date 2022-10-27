@@ -23,7 +23,7 @@ jobs:
     runs-on: ${{ inputs.runs_on }}
     steps:
       - name: No canary deployment yet
-        if: ${{ inputs.lockfile_author == "none" }}
+        if: ${{ inputs.lockfile_author == 'none' }}
         run: |
           echo "# There isn't any new canary deployment" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -38,7 +38,7 @@ jobs:
 
 
       - name: Triggering actor mismatch
-        if: ${{ ( inputs.lockfile_author != "none" ) && ( inputs.lockfile_author != github.triggering_actor ) }}
+        if: ${{ ( inputs.lockfile_author != 'none' ) && ( inputs.lockfile_author != github.triggering_actor ) }}
         run: |
           echo "# Triggering actor mismatch" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

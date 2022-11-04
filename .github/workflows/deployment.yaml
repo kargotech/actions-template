@@ -54,7 +54,7 @@ on:
         required: false
         type: string
         default: "2.4.11"
-      
+
       argocd_timeout:
         required: false
         type: number
@@ -64,6 +64,11 @@ on:
         required: true
         type: boolean
         default: false
+
+      use_argo_sync:
+        required: true
+        type: boolean
+        default: true
 
     secrets:
       deployer_app_id:
@@ -121,15 +126,19 @@ jobs:
       # Setup gcloud CLI
       - name: Setup gcloud CLI
         uses: google-github-actions/setup-gcloud@v0
+        if: ${{ inputs.use_argo_sync }}
         with:
           install_components: kubectl
+
       - name: Setup Kubernetes config
+        if: ${{ inputs.use_argo_sync }}
         run: |
           gcloud container clusters get-credentials "${{ inputs.gke_cluster }}" --zone "${{ inputs.gke_zone }}"
           kubectl config set-context --current --namespace=argocd
 
       - name: ArgoCD sync app
         uses: clowdhaus/argo-cd-action/@main
+        if: ${{ inputs.use_argo_sync }}
         with:
           version: ${{ inputs.argocd_version }}
           command: app sync ${{ inputs.argocd_app }}
@@ -137,15 +146,15 @@ jobs:
 
       - name: ArgoCD wait until application healthy (non canary)
         uses: clowdhaus/argo-cd-action/@main
-        if: ${{ inputs.is_canary == false }}
+        if: ${{ ( inputs.is_canary == false ) && ( inputs.use_argo_sync ) }}
         with:
           version: ${{ inputs.argocd_version }}
           command: app wait ${{ inputs.argocd_app }}
           options: --core --timeout ${{ inputs.argocd_timeout }}
-      
+
       - name: ArgoCD wait until application healthy (canary)
         uses: clowdhaus/argo-cd-action/@main
-        if: ${{ inputs.is_canary }}
+        if: ${{ ( inputs.is_canary ) && ( inputs.use_argo_sync ) }}
         with:
           version: ${{ inputs.argocd_version }}
           command: app wait ${{ inputs.argocd_app }}

@@ -25,7 +25,17 @@ on:
       argocd_directory:
         required: true
         type: string
-    
+      
+      lockfile_directory:
+        required: false
+        type: string
+        default: none
+
+      lockfile_name:
+        required: false
+        type: string
+        default: none
+
     outputs:
       file_exists:
         description: "true/false STRING" # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idoutputs
@@ -33,6 +43,12 @@ on:
       lockfile_author:
         description: "Github username"
         value: ${{ jobs.check_lockfile.outputs.output2 }}
+      service_name:
+        description: "Service Name of the Lockfile"
+        value: ${{ jobs.check_lockfile.outputs.output3 }}
+      environment:
+        description: "Environment of the Lockfile"
+        value: ${{ jobs.check_lockfile.outputs.output4 }}
 
     secrets:
       deployer_app_id:
@@ -48,8 +64,10 @@ jobs:
     runs-on: ${{ inputs.runs_on }}
     # Map the job outputs to step outputs
     outputs:
-      output1: ${{ steps.step4.outputs.file_exists }}
-      output2: ${{ steps.step4.outputs.lockfile_author }}
+      output1: ${{ steps.checkfile.outputs.file_exists }}
+      output2: ${{ steps.checkfile.outputs.lockfile_author }}
+      output3: ${{ steps.checkfile.outputs.service_name }}
+      output4: ${{ steps.checkfile.outputs.environment }}
     steps:
       - name: Generate token
         id: generate_token
@@ -71,18 +89,30 @@ jobs:
           path: temp
 
       - name: Check file
-        id: step4
+        id: checkfile
         run: |
-          cd temp/${{ inputs.argocd_directory }}
+          if [ ${{ inputs.lockfile_directory }} == "none" ]
+          then
+            LOCKFILEDIR=temp/${{ inputs.argocd_directory }}
+            LOCKFILENAME="${{ inputs.environment }}-${{ inputs.service_name }}.lock"
+          else
+            LOCKFILEDIR=temp/${{ inputs.lockfile_directory }}
+            LOCKFILENAME=${{ inputs.lockfile_name }}
+          fi
+          cd $LOCKFILEDIR
           git fetch origin master
           git reset --hard origin/master
-          if [ -e "${{ inputs.environment }}-${{ inputs.service_name }}.lock" ]
+          if [ -e $LOCKFILENAME ]
           then
             echo "file exists"
             echo "file_exists=true" >> $GITHUB_OUTPUT
-            cat ${{ inputs.environment }}-${{ inputs.service_name }}.lock | grep "lockfile_author=" >> $GITHUB_OUTPUT
+            cat $LOCKFILENAME | grep "lockfile_author=" >> $GITHUB_OUTPUT
+            cat $LOCKFILENAME | grep "service_name=" >> $GITHUB_OUTPUT
+            cat $LOCKFILENAME | grep "environment=" >> $GITHUB_OUTPUT
           else
             echo "file not exists"
             echo "file_exists=false" >> $GITHUB_OUTPUT
             echo "lockfile_author=none" >> $GITHUB_OUTPUT
+            echo "service_name=none" >> $GITHUB_OUTPUT
+            echo "environment=none" >> $GITHUB_OUTPUT
           fi

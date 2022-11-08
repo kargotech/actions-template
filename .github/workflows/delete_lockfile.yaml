@@ -26,6 +26,16 @@ on:
         required: true
         type: string
 
+      lockfile_directory:
+        required: false
+        type: string
+        default: none
+
+      lockfile_name:
+        required: false
+        type: string
+        default: none
+
     secrets:
       deployer_app_id:
         required: true
@@ -71,9 +81,17 @@ jobs:
           timeout_seconds: 15
           max_attempts: 6
           command: |
-            cd temp/${{ inputs.argocd_directory }}
+            if [ ${{ inputs.lockfile_directory }} == "none" ]
+            then
+              LOCKFILEDIR=temp/${{ inputs.argocd_directory }}
+              LOCKFILENAME="${{ inputs.environment }}-${{ inputs.service_name }}.lock"
+            else
+              LOCKFILEDIR=temp/${{ inputs.lockfile_directory }}
+              LOCKFILENAME=${{ inputs.lockfile_name }}
+            fi
+            cd $LOCKFILEDIR
             git fetch origin master
             git reset --hard origin/master
-            rm "${{ inputs.environment }}-${{ inputs.service_name }}.lock"
+            rm $LOCKFILENAME
             git commit -am "Delete lockfile for '${{ inputs.service_name }}' '${{ inputs.environment }}'"
             git push

@@ -25,6 +25,16 @@ on:
       argocd_directory:
         required: true
         type: string
+      
+      lockfile_directory:
+        required: false
+        type: string
+        default: none
+
+      lockfile_name:
+        required: false
+        type: string
+        default: none
 
     secrets:
       deployer_app_id:
@@ -71,13 +81,23 @@ jobs:
           timeout_seconds: 15
           max_attempts: 6
           command: |
-            cd temp/${{ inputs.argocd_directory }}
+            if [ ${{ inputs.lockfile_directory }} == "none" ]
+            then
+              LOCKFILEDIR=temp/${{ inputs.argocd_directory }}
+              LOCKFILENAME="${{ inputs.environment }}-${{ inputs.service_name }}.lock"
+            else
+              LOCKFILEDIR=temp/${{ inputs.lockfile_directory }}
+              LOCKFILENAME=${{ inputs.lockfile_name }}
+            fi
+            cd $LOCKFILEDIR
             git fetch origin master
             git reset --hard origin/master
-            echo "lockfile_author=${{ github.triggering_actor }}" > "${{ inputs.environment }}-${{ inputs.service_name }}.lock"
-            echo "timestamp=$(date +'%s')" >> "${{ inputs.environment }}-${{ inputs.service_name }}.lock"
-            echo "commit_sha='${{ github.sha }}'" >> "${{ inputs.environment }}-${{ inputs.service_name }}.lock"
-            cat "${{ inputs.environment }}-${{ inputs.service_name }}.lock"
-            git add "${{ inputs.environment }}-${{ inputs.service_name }}.lock"
+            echo "lockfile_author=${{ github.triggering_actor }}" > $LOCKFILENAME
+            echo "timestamp=$(date +'%s')" >> $LOCKFILENAME
+            echo "commit_sha=${{ github.sha }}" >> $LOCKFILENAME
+            echo "service_name=${{ inputs.service_name }}" >> $LOCKFILENAME
+            echo "environment=${{ inputs.environment }}" >> $LOCKFILENAME
+            cat $LOCKFILENAME
+            git add $LOCKFILENAME
             git commit -am "Update lockfile for '${{ inputs.service_name }}' '${{ inputs.environment }}'"
             git push

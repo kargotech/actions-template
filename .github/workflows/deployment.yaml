@@ -61,12 +61,12 @@ on:
         default: 600
 
       is_canary:
-        required: true
+        required: false
         type: boolean
         default: false
 
       use_argo_sync:
-        required: true
+        required: false
         type: boolean
         default: true
 

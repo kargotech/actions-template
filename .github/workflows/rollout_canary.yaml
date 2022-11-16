@@ -74,6 +74,16 @@ on:
         required: true
         type: string
         default: 'none'
+      
+      with_notification:
+        required: false
+        type: boolean
+        default: false
+      
+      other_mentions:
+        required: false
+        type: string
+        default: ''
 
     secrets:
       deployer_app_id:
@@ -133,6 +143,8 @@ jobs:
         run: |
           AUTHOR_NAME=$(git show -s --format='%aN' ${{ github.sha }})
           AUTHOR_EMAIL=$(git show -s --format='%ae' ${{ github.sha }})
+          NOTIFICATION_EMAILS=${AUTHOR_EMAIL},${{ inputs.other_mentions }}
+          echo "notification_emails=$NOTIFICATION_EMAILS" >> $GITHUB_ENV
           git config --global user.name "${AUTHOR_NAME}"
           git config --global user.email "${AUTHOR_EMAIL}"
 
@@ -161,3 +173,27 @@ jobs:
           version: ${{ inputs.argocd_version }}
           command: app sync ${{ inputs.argocd_app }}
           options: --core --timeout ${{ inputs.argocd_timeout }}
+
+      - name: Failed notification
+        if: ${{ failure() && inputs.with_notification }}
+        uses: kargotech/msteams-webhook-action/@v0.0.1
+        with:
+          status: failed
+          title: Change ${{ inputs.http_routes }} to ${{ inputs.release }} release for ${{ inputs.service_name }} ${{ inputs.environment }} failed
+          description: Check via link below for more info
+          mentioned_name: ${{ env.notification_emails }}
+          mentioned_email: ${{ env.notification_emails }}
+          link_display: Workflow Result
+          link_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      
+      - name: Success notification
+        if: ${{ success() && inputs.with_notification }}
+        uses: kargotech/msteams-webhook-action/@v0.0.1
+        with:
+          status: success
+          title: Change ${{ inputs.http_routes }} to ${{ inputs.release }} release for ${{ inputs.service_name }} ${{ inputs.environment }} success
+          description: Check via link below for more info
+          mentioned_name: ${{ env.notification_emails }}
+          mentioned_email: ${{ env.notification_emails }}
+          link_display: Workflow Result
+          link_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

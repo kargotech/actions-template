@@ -79,7 +79,12 @@ on:
         required: false
         type: boolean
         default: false
-      
+
+      webhook_url:
+        required: false
+        type: string
+        default: "https://kargox.webhook.office.com/webhookb2/37cc98bd-f0c8-4d1a-8714-263d1a21d17b@ff32afaf-9162-41d3-9e10-55e5b8521f7a/IncomingWebhook/053848a283f34a3b84dc151b5d7d4e4c/f7963cf0-f52f-47c0-88a0-269d158c619a"
+
       other_mentions:
         required: false
         type: string
@@ -178,10 +183,11 @@ jobs:
         if: ${{ failure() && inputs.with_notification }}
         uses: kargotech/msteams-webhook-action/@v0.0.1
         with:
+          webhook_url: ${{ inputs.webhook_url }}
           status: failed
           title: Change ${{ inputs.http_routes }} to ${{ inputs.release }} release for ${{ inputs.service_name }} ${{ inputs.environment }} failed
           description: Check via link below for more info
-          mentioned_name: ${{ env.notification_emails }}
+          mentioned_display: ${{ env.notification_emails }}
           mentioned_email: ${{ env.notification_emails }}
           link_display: Workflow Result
           link_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -190,10 +196,11 @@ jobs:
         if: ${{ success() && inputs.with_notification }}
         uses: kargotech/msteams-webhook-action/@v0.0.1
         with:
+          webhook_url: ${{ inputs.webhook_url }}
           status: success
           title: Change ${{ inputs.http_routes }} to ${{ inputs.release }} release for ${{ inputs.service_name }} ${{ inputs.environment }} success
           description: Check via link below for more info
-          mentioned_name: ${{ env.notification_emails }}
+          mentioned_display: ${{ env.notification_emails }}
           mentioned_email: ${{ env.notification_emails }}
           link_display: Workflow Result
           link_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

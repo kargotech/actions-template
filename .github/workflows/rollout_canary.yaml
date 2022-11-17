@@ -60,6 +60,11 @@ on:
         type: number
         default: 600
       
+      argocd_wait_for:
+        required: false
+        type: string
+        default: suspended
+      
       argo_rollout_command:
         required: false
         type: string
@@ -176,7 +181,14 @@ jobs:
         with:
           version: ${{ inputs.argocd_version }}
           command: app sync ${{ inputs.argocd_app }}
-          options: --core --timeout ${{ inputs.argocd_timeout }}
+          options: --core --async --timeout ${{ inputs.argocd_timeout }}
+      
+      - name: ArgoCD wait until application healthy (canary)
+        uses: clowdhaus/argo-cd-action/@main
+        with:
+          version: ${{ inputs.argocd_version }}
+          command: app wait ${{ inputs.argocd_app }}
+          options: --core --${{ inputs.argocd_wait_for }} --timeout ${{ inputs.argocd_timeout }}
 
       - name: Failed notification
         if: ${{ failure() && inputs.with_notification }}

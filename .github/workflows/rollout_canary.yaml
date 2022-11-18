@@ -53,12 +53,17 @@ on:
       argocd_version:
         required: false
         type: string
-        default: "2.4.11"
+        default: "2.5.2"
       
       argocd_timeout:
         required: false
         type: number
         default: 600
+      
+      argocd_wait_for:
+        required: false
+        type: string
+        default: suspended
       
       argo_rollout_command:
         required: false
@@ -74,6 +79,20 @@ on:
         required: true
         type: string
         default: 'none'
+      
+      with_notification:
+        required: false
+        type: boolean
+        default: false
+
+      webhook_url:
+        required: false
+        type: string
+
+      other_mentions:
+        required: false
+        type: string
+        default: ''
 
     secrets:
       deployer_app_id:
@@ -99,7 +118,7 @@ jobs:
           kubectl config set-context --current --namespace=argocd
 
       - name: ArgoCD run Argo Rollout action
-        uses: clowdhaus/argo-cd-action/@main
+        uses: clowdhaus/argo-cd-action/@v1.15.0
         if: ${{ inputs.argo_rollout_command != 'none' }} 
         with:
           version: ${{ inputs.argocd_version }}
@@ -133,6 +152,8 @@ jobs:
         run: |
           AUTHOR_NAME=$(git show -s --format='%aN' ${{ github.sha }})
           AUTHOR_EMAIL=$(git show -s --format='%ae' ${{ github.sha }})
+          NOTIFICATION_EMAILS=${AUTHOR_EMAIL},${{ inputs.other_mentions }}
+          echo "notification_emails=$NOTIFICATION_EMAILS" >> $GITHUB_ENV
           git config --global user.name "${AUTHOR_NAME}"
           git config --global user.email "${AUTHOR_EMAIL}"
 
@@ -156,8 +177,41 @@ jobs:
             git push
 
       - name: ArgoCD sync app
-        uses: clowdhaus/argo-cd-action/@main
+        uses: clowdhaus/argo-cd-action/@v1.15.0
         with:
           version: ${{ inputs.argocd_version }}
           command: app sync ${{ inputs.argocd_app }}
-          options: --core --timeout ${{ inputs.argocd_timeout }}
+          options: --core --async --timeout ${{ inputs.argocd_timeout }}
+      
+      - name: ArgoCD wait until application healthy (canary)
+        uses: clowdhaus/argo-cd-action/@v1.15.0
+        with:
+          version: ${{ inputs.argocd_version }}
+          command: app wait ${{ inputs.argocd_app }}
+          options: --core --${{ inputs.argocd_wait_for }} --timeout ${{ inputs.argocd_timeout }}
+
+      - name: Failed notification
+        if: ${{ failure() && inputs.with_notification }}
+        uses: kargotech/msteams-webhook-action/@v0.1.2
+        with:
+          webhook_url: ${{ inputs.webhook_url }}
+          status: failed
+          title: Change ${{ inputs.http_routes }} to ${{ inputs.release }} release for ${{ inputs.service_name }} ${{ inputs.environment }} failed
+          description: Check via link below for more info
+          mentioned_display: ${{ env.notification_emails }}
+          mentioned_email: ${{ env.notification_emails }}
+          link_display: Workflow Result
+          link_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      
+      - name: Success notification
+        if: ${{ success() && inputs.with_notification }}
+        uses: kargotech/msteams-webhook-action/@v0.1.2
+        with:
+          webhook_url: ${{ inputs.webhook_url }}
+          status: success
+          title: Change ${{ inputs.http_routes }} to ${{ inputs.release }} release for ${{ inputs.service_name }} ${{ inputs.environment }} success
+          description: Check via link below for more info
+          mentioned_display: ${{ env.notification_emails }}
+          mentioned_email: ${{ env.notification_emails }}
+          link_display: Workflow Result
+          link_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

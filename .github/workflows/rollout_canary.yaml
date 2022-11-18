@@ -192,7 +192,7 @@ jobs:
 
       - name: Failed notification
         if: ${{ failure() && inputs.with_notification }}
-        uses: kargotech/msteams-webhook-action/@master
+        uses: kargotech/msteams-webhook-action/@v0.1.2
         with:
           webhook_url: ${{ inputs.webhook_url }}
           status: failed
@@ -205,7 +205,7 @@ jobs:
       
       - name: Success notification
         if: ${{ success() && inputs.with_notification }}
-        uses: kargotech/msteams-webhook-action/@master
+        uses: kargotech/msteams-webhook-action/@v0.1.2
         with:
           webhook_url: ${{ inputs.webhook_url }}
           status: success

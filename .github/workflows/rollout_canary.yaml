@@ -53,7 +53,7 @@ on:
       argocd_version:
         required: false
         type: string
-        default: "2.4.11"
+        default: "2.5.2"
       
       argocd_timeout:
         required: false

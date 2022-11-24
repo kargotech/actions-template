@@ -85,10 +85,6 @@ on:
         type: boolean
         default: false
 
-      webhook_url:
-        required: false
-        type: string
-
       other_mentions:
         required: false
         type: string
@@ -101,6 +97,8 @@ on:
         required: true
       deployer_installation_id:
         required: true
+      webhook_url:
+        required: false
 
 jobs:
   argo_rollout_and_change_release_track:
@@ -194,10 +192,10 @@ jobs:
         if: ${{ failure() && inputs.with_notification }}
         uses: kargotech/msteams-webhook-action/@v0.1.2
         with:
-          webhook_url: ${{ inputs.webhook_url }}
+          webhook_url: ${{ secrets.webhook_url }}
           status: failed
           title: Change ${{ inputs.http_routes }} to ${{ inputs.release }} release for ${{ inputs.service_name }} ${{ inputs.environment }} failed
-          description: Check via link below for more info
+          description: ArgoCD command - ${{ inputs.argo_rollout_command }}. Check via link below for more info.
           mentioned_display: ${{ env.notification_emails }}
           mentioned_email: ${{ env.notification_emails }}
           link_display: Workflow Result
@@ -207,10 +205,10 @@ jobs:
         if: ${{ success() && inputs.with_notification }}
         uses: kargotech/msteams-webhook-action/@v0.1.2
         with:
-          webhook_url: ${{ inputs.webhook_url }}
+          webhook_url: ${{ secrets.webhook_url }}
           status: success
           title: Change ${{ inputs.http_routes }} to ${{ inputs.release }} release for ${{ inputs.service_name }} ${{ inputs.environment }} success
-          description: Check via link below for more info
+          description: ArgoCD command - ${{ inputs.argo_rollout_command }}. Check via link below for more info.
           mentioned_display: ${{ env.notification_emails }}
           mentioned_email: ${{ env.notification_emails }}
           link_display: Workflow Result

@@ -106,7 +106,7 @@ jobs:
     runs-on: ${{ inputs.runs_on }}    
     steps:
       - name: Setup gcloud CLI
-        uses: google-github-actions/setup-gcloud@v0
+        uses: google-github-actions/setup-gcloud@v1
         with:
           install_components: kubectl
 

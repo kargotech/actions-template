@@ -34,7 +34,7 @@ jobs:
     steps:
       # Setup docker GCR auth
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v0
+        uses: google-github-actions/setup-gcloud@v1
       - name: Configure resources
         run: |
           gcloud info

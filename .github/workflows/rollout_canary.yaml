@@ -213,3 +213,11 @@ jobs:
           mentioned_email: ${{ env.notification_emails }}
           link_display: Workflow Result
           link_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Annotate Canary Rollout to Grafana
+        uses: frankie567/grafana-annotation-action@v1.0.2
+        with:
+          apiHost: ${{ secrets.GRAFANA_API_URL }}
+          apiToken: ${{ secrets.GRAFANA_API_TOKEN }}
+          text: Canary Rollout with http routes (${{ inputs.http_routes }}) of ${{ github.sha }}
+          tags: event:canary-rollout,service:${{ inputs.service-name }}

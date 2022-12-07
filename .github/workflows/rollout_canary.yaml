@@ -17,6 +17,11 @@ on:
         type: string
         default: "ltms-demo"
 
+      rollout_phase_name:
+        required: false
+        type: string
+        default: unknown-rollout-phase
+
       repository:
         required: false
         type: string
@@ -224,5 +229,5 @@ jobs:
         with:
           apiHost: ${{ secrets.grafana_api_url }}
           apiToken: ${{ secrets.grafana_api_token }}
-          text: Canary Rollout with http routes (${{ inputs.http_routes }}) of ${{ github.sha }}
+          text: Canary rollout phase (${{ inputs.rollout_phase_name }}) of ${{ github.sha }}
           tags: event:canary-rollout,service:${{ inputs.service-name }}

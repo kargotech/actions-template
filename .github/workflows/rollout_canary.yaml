@@ -17,11 +17,6 @@ on:
         type: string
         default: "ltms-demo"
 
-      rollout_phase_name:
-        required: false
-        type: string
-        default: unknown-rollout-phase
-
       repository:
         required: false
         type: string
@@ -103,10 +98,6 @@ on:
       deployer_installation_id:
         required: true
       webhook_url:
-        required: false
-      grafana_api_url:
-        required: false
-      grafana_api_token:
         required: false
 
 jobs:
@@ -222,12 +213,3 @@ jobs:
           mentioned_email: ${{ env.notification_emails }}
           link_display: Workflow Result
           link_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-      - name: Annotate Canary Rollout to Grafana
-        uses: frankie567/grafana-annotation-action@v1.0.2
-        continue-on-error: true
-        with:
-          apiHost: ${{ secrets.grafana_api_url }}
-          apiToken: ${{ secrets.grafana_api_token }}
-          text: Canary rollout phase (${{ inputs.rollout_phase_name }}) of ${{ github.sha }}
-          tags: event:canary-rollout,service:${{ inputs.service-name }}

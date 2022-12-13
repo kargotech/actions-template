@@ -176,4 +176,4 @@ jobs:
           RUNNER_LABELS="run_id/$GITHUB_RUN_ID/run_attempt/$GITHUB_RUN_ATTEMPT"
 
           echo "github_action_deployment_event 1" | \
-            curl -XPUT --binary-data @- ${{ env.pushgateway_url }}/metrics/job/deployment/$APP_LABELS/$RUNNER_LABELS
+            curl -XPUT --data-binary @- ${{ env.pushgateway_url }}/metrics/job/deployment/$APP_LABELS/$RUNNER_LABELS

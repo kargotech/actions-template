@@ -169,6 +169,7 @@ jobs:
 
       - name: Publish metrics to Prometheus Gateway
         if: always()
+        continue-on-error: true
         run: |
           APP_LABELS="environment/${{ env.environment }}/app/${{ env.service_name }}/is_canary/${{ env.is_canary }}/result_canary/${{ steps.wait_deployment_canary.outcome }}/result_non_canary/${{ steps.wait_deployment.outcome }}"
 

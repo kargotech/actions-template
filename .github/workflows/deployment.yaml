@@ -171,7 +171,7 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
-          APP_LABELS="environment/${{ inputs.environment }}/app/${{ inputs.service_name }}/is_canary/${{ inputs.is_canary }}/result_canary/${{ steps.wait_deployment_canary.outcome }}/result_non_canary/${{ steps.wait_deployment.outcome }}"
+          APP_LABELS="environment/${{ inputs.environment }}/app/${{ inputs.service_name }}/is_canary/${{ inputs.is_canary }}/result_canary/${{ steps.wait_deployment_canary.outcome }}/result_non_canary/${{ steps.wait_deployment.outcome }}"/github_sha/${{ github.sha }}
 
           RUNNER_LABELS="run_id/$GITHUB_RUN_ID/run_attempt/$GITHUB_RUN_ATTEMPT"
 

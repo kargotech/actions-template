@@ -70,6 +70,11 @@ on:
         type: boolean
         default: true
 
+      pushgateway_url:
+        required: false
+        type: string
+        default: http://prometheus-root-pushgateway.monitor.svc.cluster.local:9091
+
     secrets:
       deployer_app_id:
         required: true
@@ -145,6 +150,7 @@ jobs:
           options: --core --async
 
       - name: ArgoCD wait until application healthy (non canary)
+        id: wait_deployment
         uses: clowdhaus/argo-cd-action/@v1.15.0
         if: ${{ ( inputs.is_canary == false ) && ( inputs.use_argo_sync ) }}
         with:
@@ -153,9 +159,21 @@ jobs:
           options: --core --timeout ${{ inputs.argocd_timeout }}
 
       - name: ArgoCD wait until application healthy (canary)
+        id: wait_deployment_canary
         uses: clowdhaus/argo-cd-action/@v1.15.0
         if: ${{ ( inputs.is_canary ) && ( inputs.use_argo_sync ) }}
         with:
           version: ${{ inputs.argocd_version }}
           command: app wait ${{ inputs.argocd_app }}
           options: --core --suspended --timeout ${{ inputs.argocd_timeout }}
+
+      - name: Publish metrics to Prometheus Gateway
+        if: always()
+        continue-on-error: true
+        run: |
+          APP_LABELS="environment/${{ inputs.environment }}/app/${{ inputs.service_name }}/is_canary/${{ inputs.is_canary }}/result_canary/${{ steps.wait_deployment_canary.outcome }}/result_non_canary/${{ steps.wait_deployment.outcome }}"/github_sha/${{ github.sha }}
+
+          RUNNER_LABELS="run_id/$GITHUB_RUN_ID/run_attempt/$GITHUB_RUN_ATTEMPT"
+
+          echo "github_action_deployment_event 1" | \
+            curl -XPUT --data-binary @- ${{ inputs.pushgateway_url }}/metrics/job/deployment/$APP_LABELS/$RUNNER_LABELS

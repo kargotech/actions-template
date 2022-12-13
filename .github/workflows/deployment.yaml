@@ -171,9 +171,9 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
-          APP_LABELS="environment/${{ env.environment }}/app/${{ env.service_name }}/is_canary/${{ env.is_canary }}/result_canary/${{ steps.wait_deployment_canary.outcome }}/result_non_canary/${{ steps.wait_deployment.outcome }}"
+          APP_LABELS="environment/${{ inputs.environment }}/app/${{ inputs.service_name }}/is_canary/${{ inputs.is_canary }}/result_canary/${{ steps.wait_deployment_canary.outcome }}/result_non_canary/${{ steps.wait_deployment.outcome }}"
 
           RUNNER_LABELS="run_id/$GITHUB_RUN_ID/run_attempt/$GITHUB_RUN_ATTEMPT"
 
           echo "github_action_deployment_event 1" | \
-            curl -XPUT --data-binary @- ${{ env.pushgateway_url }}/metrics/job/deployment/$APP_LABELS/$RUNNER_LABELS
+            curl -XPUT --data-binary @- ${{ inputs.pushgateway_url }}/metrics/job/deployment/$APP_LABELS/$RUNNER_LABELS

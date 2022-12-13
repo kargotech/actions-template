@@ -73,7 +73,7 @@ on:
       pushgateway_url:
         required: false
         type: string
-        default: https://prometheus-root-pushgateway.monitor.svc.cluster.local:9091
+        default: http://prometheus-root-pushgateway.monitor.svc.cluster.local:9091
 
     secrets:
       deployer_app_id:

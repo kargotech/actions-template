@@ -167,7 +167,7 @@ jobs:
           command: app wait ${{ inputs.argocd_app }}
           options: --core --suspended --timeout ${{ inputs.argocd_timeout }}
 
-      - name: Publish metrics to Prometheus Gateway
+      - name: Publish metrics to Pushgateway
         if: always()
         continue-on-error: true
         run: |
@@ -175,5 +175,5 @@ jobs:
 
           RUNNER_LABELS="run_id/$GITHUB_RUN_ID/run_attempt/$GITHUB_RUN_ATTEMPT"
 
-          echo "github_action_deployment_event 1" | \
+          echo "github_action_deployment_event $(date +%s)" | \
             curl -XPUT --data-binary @- ${{ inputs.pushgateway_url }}/metrics/job/deployment/$APP_LABELS/$RUNNER_LABELS

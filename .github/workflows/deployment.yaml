@@ -173,7 +173,8 @@ jobs:
         run: |
           APP_LABELS="environment/${{ inputs.environment }}/app/${{ inputs.service_name }}/is_canary/${{ inputs.is_canary }}/result_canary/${{ steps.wait_deployment_canary.outcome }}/result_non_canary/${{ steps.wait_deployment.outcome }}"/github_sha/${{ github.sha }}
 
-          RUNNER_LABELS="run_id/$GITHUB_RUN_ID/run_attempt/$GITHUB_RUN_ATTEMPT"
+          BASE64_REPOSITORY=$(echo $GITHUB_REPOSITORY | base64)
+          RUNNER_LABELS="run_id/$GITHUB_RUN_ID/run_attempt/$GITHUB_RUN_ATTEMPT/repository@base64/$BASE64_REPOSITORY"
 
           echo "github_action_deployment_event $(date +%s)" | \
             curl -XPUT --data-binary @- ${{ inputs.pushgateway_url }}/metrics/job/deployment/$APP_LABELS/$RUNNER_LABELS

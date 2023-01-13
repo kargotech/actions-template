@@ -31,8 +31,8 @@ jobs:
 
     steps:
       # Install dependency
-      - name: Install unzip
-        run: sudo apt update && sudo apt install -y unzip
+      - name: Install dependency
+        run: sudo apt update && sudo apt install -y unzip make
 
       # Download and unpack build artifact
       - name: Download build result

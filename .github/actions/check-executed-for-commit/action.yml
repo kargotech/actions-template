@@ -1,0 +1,26 @@
+name: "Check if there's previous execution for commit hash"
+description: |
+  This action will check if there's previous execution for commit hash, 
+  if there's, it will return true, otherwise it will return false
+  useful for skipping job execution if there's previous execution for commit hash
+inputs:
+  job_key:
+    description: 'A unique job key id for this repo, for differentiating other job execution on commit hash'
+    required: true
+
+outputs:
+  success-executed:
+    description: "Whether job successfully executed before"
+    value: ${{ steps.check_commit_executed_before.outputs.cache-hit }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: random-number-generator
+      run: echo "random-number=$(echo $RANDOM)" >> random-cache-file.txt
+      shell: bash
+    - uses: actions/cache@v3
+      id: check_commit_executed_before
+      with:
+        path: random-cache-file.txt
+        key: ${{ inputs.job_key }}-${{ github.sha }}

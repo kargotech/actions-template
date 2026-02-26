@@ -30,7 +30,7 @@ jobs:
   # Check if image exists in GCR
   check-gcr:
     name: Check image in GCR
-    runs-on: self-hosted
+    runs-on: ${{ inputs.runs_on }}
     steps:
       # Setup docker GCR auth
       - name: Set up Cloud SDK
